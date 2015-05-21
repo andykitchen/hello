@@ -21,7 +21,7 @@ OptionParser.new do |opts|
   end
 
   opts.on("-v", "--version", "display version information and exit") do
-    puts "super-hello 0.1.0-rc1"
+    puts "super-hello 0.1.0-rc2"
     exit
   end
 
@@ -64,7 +64,7 @@ greeting =
 
 greeting =
   if blink
-    "\x1b[5m" + greeting + "\x1b[0m"
+    "\x1b[5m#{greeting}\x1b[0m"
   else
     greeting
   end
