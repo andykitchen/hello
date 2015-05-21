@@ -4,14 +4,15 @@ require 'optparse'
 require 'webrick'
 
 ng = false
-blink = true
+blink = false
 greeting = "Hello World!"
 server = false
 port = 8000
 
 OptionParser.new do |opts|
-  opts.banner = "Usage: hello [OPTION]\nPrint a friendly, customizable greeting."
+  opts.banner = "Usage: hello [OPTION]"
 
+  opts.separator "Print a friendly, customizable greeting."
   opts.separator ""
 
   opts.on("-h", "--help", "display this help and exit") do
@@ -38,13 +39,19 @@ OptionParser.new do |opts|
     server = true
   end
 
-  opts.on("-p", "--port=PORT", "http server port") do |server_port|
+  opts.on("-p", "--port=PORT", "listen on PORT (default 8000)") do |server_port|
     port = server_port.to_i
   end
 
+  opts.on("-b", "--blink", "use ANSI escapes to blink text") do
+    blink = true
+  end
+
+  opts.separator ""
+
 end.parse!
 
-greeting_body =
+greeting =
   if ng
     horizontal_line = "+#{"-" * (greeting.length+2)}+"
 
@@ -55,15 +62,22 @@ greeting_body =
     greeting
   end
 
+greeting =
+  if blink
+    "\x1b[5m" + greeting + "\x1b[0m"
+  else
+    greeting
+  end
+
 if server
   server = WEBrick::HTTPServer.new :Port => port
   server.mount_proc '/' do |req, res|
-    res.body = greeting_body + "\n"
+    res.body = greeting + "\n"
   end
 
   trap 'INT' do server.shutdown end
 
   server.start
 else
-  puts greeting_body
+  puts greeting
 end
