@@ -1,12 +1,18 @@
 #!/usr/bin/env ruby
 
 require 'optparse'
+require 'webrick'
 
 ng = false
+blink = true
 greeting = "Hello World!"
+server = false
+port = 8000
 
 OptionParser.new do |opts|
   opts.banner = "Usage: hello [OPTION]\nPrint a friendly, customizable greeting."
+
+  opts.separator ""
 
   opts.on("-h", "--help", "display this help and exit") do
     puts opts
@@ -14,9 +20,11 @@ OptionParser.new do |opts|
   end
 
   opts.on("-v", "--version", "display version information and exit") do
-    puts "super-hello 0.0.1-alpha"
+    puts "super-hello 0.1.0-rc1"
     exit
   end
+
+  opts.separator ""
 
   opts.on("-n", "--next-generation", "use next-generation greeting format") do
     ng = true
@@ -26,14 +34,36 @@ OptionParser.new do |opts|
     greeting = custom_greeting
   end
 
+  opts.on("-s", "--server", "launch http server to deliver greetings") do |server_port|
+    server = true
+  end
+
+  opts.on("-p", "--port=PORT", "http server port") do |server_port|
+    port = server_port.to_i
+  end
+
 end.parse!
 
-if ng
-  horizontal_line = "+#{"-" * (greeting.length+2)}+"
+greeting_body =
+  if ng
+    horizontal_line = "+#{"-" * (greeting.length+2)}+"
 
-  puts horizontal_line
-  puts "| #{greeting} |"
-  puts horizontal_line
+    [horizontal_line,
+     "| #{greeting} |",
+     horizontal_line].join("\n")
+  else
+    greeting
+  end
+
+if server
+  server = WEBrick::HTTPServer.new :Port => port
+  server.mount_proc '/' do |req, res|
+    res.body = greeting_body + "\n"
+  end
+
+  trap 'INT' do server.shutdown end
+
+  server.start
 else
-  puts greeting
+  puts greeting_body
 end
