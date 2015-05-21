@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+ng = false
+greeting = "Hello World!"
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: hello [OPTION]\nPrint a friendly, customizable greeting."
+
+  opts.on("-h", "--help", "display this help and exit") do
+    puts opts
+    exit
+  end
+
+  opts.on("-v", "--version", "display version information and exit") do
+    puts "super-hello 0.0.1-alpha"
+    exit
+  end
+
+  opts.on("-n", "--next-generation", "use next-generation greeting format") do
+    ng = true
+  end
+
+  opts.on("-g", "--greeting=TEXT", "use TEXT as the greeting message") do |custom_greeting|
+    greeting = custom_greeting
+  end
+
+end.parse!
+
+if ng
+  horizontal_line = "+#{"-" * (greeting.length+2)}+"
+
+  puts horizontal_line
+  puts "| #{greeting} |"
+  puts horizontal_line
+else
+  puts greeting
+end
