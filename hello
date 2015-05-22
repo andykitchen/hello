@@ -3,12 +3,11 @@
 
 require 'optparse'
 
-ng = false
-blink = false
-unicode = false
-greeting = "Hello World!"
-server = false
-port = 8000
+Options = Struct.new(:greeting, :ng, :blink, :unicode, :server, :port)
+
+options = Options.new
+options.greeting = "Hello World!"
+options.port = 8000
 
 OptionParser.new do |opts|
   opts.banner = "Usage: hello [OPTION]"
@@ -29,74 +28,84 @@ OptionParser.new do |opts|
   opts.separator ""
 
   opts.on("-n", "--next-generation", "use next-generation greeting format") do
-    ng = true
+    options.ng = true
   end
 
-  opts.on("-g", "--greeting=TEXT", "use TEXT as the greeting message") do |custom_greeting|
-    greeting = custom_greeting
+  opts.on("-g", "--greeting=TEXT", "use TEXT as the greeting message") do |greeting|
+    options.greeting = greeting
   end
 
-  opts.on("-s", "--server", "launch http server to deliver greetings") do |server_port|
-    server = true
+  opts.on("-s", "--server", "launch http server to deliver greetings") do
+    options.server = true
   end
 
-  opts.on("-p", "--port=PORT", "listen on PORT (default 8000)") do |server_port|
-    port = server_port.to_i
+  opts.on("-p", "--port=PORT", "listen on PORT (default 8000)") do |port|
+    options.port = port.to_i
   end
 
   opts.on("-b", "--blink", "use ANSI escapes to blink text") do
-    blink = true
+    options.blink = true
   end
 
   opts.on("-u", "--unicode", "use unicode box drawing characters") do
-    unicode = true
+    options.unicode = true
   end
 
   opts.separator ""
 
 end.parse!
 
+greeting = options.greeting
+
 greeting =
   case
-  when ng && unicode
-    line = "─" * (greeting.length+2)
+  when options.ng && options.unicode
+    n = greeting.length + 2
 
-    ["┌#{ line     }┐",
-     "│ #{greeting} │",
-     "└#{ line     }┘"].join("\n")
-  when ng
-    line = "-" * (greeting.length+2)
+    [
+      "┌#{ '─' * n  }┐",
+      "│ #{greeting} │",
+      "└#{ '─' * n  }┘"
+    ].join("\n")
 
-    ["+#{ line     }+",
-     "| #{greeting} |",
-     "+#{ line     }+"].join("\n")
+  when options.ng
+    n = greeting.length + 2
+
+    [
+      "+#{ '-' * n  }+",
+      "| #{greeting} |",
+      "+#{ '-' * n  }+"
+    ].join("\n")
+
   else
     greeting
   end
 
 greeting =
-  if blink
+  if options.blink
     "\x1b[5m#{greeting}\x1b[0m"
   else
     greeting
   end
 
-if server
+greeting = greeting + "\n"
+
+if options.server
   require 'webrick'
-  server = WEBrick::HTTPServer.new :Port => port
+  server = WEBrick::HTTPServer.new :Port => options.port
   server.mount_proc '/' do |req, res|
-    res.body = greeting + "\n"
-    res.content_type = 
-      if unicode
+    res.content_type =
+      if options.unicode
         "text/plain; charset=utf8"
       else
         "text/plain"
       end
+    res.body = greeting
   end
 
   trap 'INT' do server.shutdown end
 
   server.start
 else
-  puts greeting
+  print greeting
 end
