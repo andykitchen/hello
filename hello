@@ -5,6 +5,7 @@ require 'webrick'
 
 ng = false
 blink = false
+unicode = false
 greeting = "Hello World!"
 server = false
 port = 8000
@@ -47,17 +48,28 @@ OptionParser.new do |opts|
     blink = true
   end
 
+  opts.on("-u", "--unicode", "use unicode box drawing characters") do
+    unicode = true
+  end
+
   opts.separator ""
 
 end.parse!
 
 greeting =
-  if ng
-    horizontal_line = "+#{"-" * (greeting.length+2)}+"
+  case
+  when ng && unicode
+    line = "─" * (greeting.length+2)
 
-    [horizontal_line,
+    ["┌#{ line     }┐",
+     "│ #{greeting} │",
+     "└#{ line     }┘"].join("\n")
+  when ng
+    line = "-" * (greeting.length+2)
+
+    ["+#{ line     }+",
      "| #{greeting} |",
-     horizontal_line].join("\n")
+     "+#{ line     }+"].join("\n")
   else
     greeting
   end
@@ -73,6 +85,12 @@ if server
   server = WEBrick::HTTPServer.new :Port => port
   server.mount_proc '/' do |req, res|
     res.body = greeting + "\n"
+    res.content_type = 
+      if unicode
+        "text/plain; charset=utf8"
+      else
+        "text/plain"
+      end
   end
 
   trap 'INT' do server.shutdown end
