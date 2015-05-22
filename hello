@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 
 require 'optparse'
-require 'webrick'
 
 ng = false
 blink = false
@@ -82,6 +81,7 @@ greeting =
   end
 
 if server
+  require 'webrick'
   server = WEBrick::HTTPServer.new :Port => port
   server.mount_proc '/' do |req, res|
     res.body = greeting + "\n"
